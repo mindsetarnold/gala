@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Palmarès — Gala de la Promo 50</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:       #0C0A08;
+  --surface:  #141210;
+  --surface2: #1E1B18;
+  --surface3: #252119;
+  --border:   rgba(212,180,100,0.12);
+  --border2:  rgba(212,180,100,0.25);
+  --text:     #F5EDD8;
+  --text2:    #A89870;
+  --text3:    #5C5240;
+  --gold:     #D4B464;
+  --gold2:    #F0D080;
+  --gold-bg:  rgba(212,180,100,0.10);
+  --gold-lt:  rgba(212,180,100,0.05);
+  --red:      #C0524A;
+  --red-bg:   rgba(192,82,74,0.12);
+  --green:    #5A9E72;
+  --green-bg: rgba(90,158,114,0.12);
+  --r:        8px;
+  --r-lg:     14px;
+}
+html { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.6; }
+body { min-height: 100vh; }
+body::before {
+  content: '';
+  position: fixed; inset: 0; pointer-events: none; z-index: 999;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  opacity: 0.35;
+}
+.page { max-width: 900px; margin: 0 auto; padding: 2.5rem 1.5rem 5rem; }
+.site-header { text-align: center; margin-bottom: 3rem; padding-bottom: 2rem; border-bottom: 1px solid var(--border2); position: relative; }
+.site-header::after { content: '✦'; position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); background: var(--bg); padding: 0 12px; color: var(--gold); font-size: 14px; }
+.site-kicker { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text3); margin-bottom: 10px; }
+.site-title { font-family: 'Playfair Display', serif; font-size: clamp(28px, 5vw, 48px); font-weight: 700; color: var(--gold2); line-height: 1.1; margin-bottom: 6px; }
+.site-sub { font-size: 13px; color: var(--text2); font-style: italic; }
+.sync-row { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 14px; font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace; }
+.sync-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text3); }
+.sync-dot.live { background: var(--green); box-shadow: 0 0 5px var(--green); animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+.screen { display: none; }
+.screen.active { display: block; animation: fadeIn .3s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+.center-wrap { display: flex; align-items: center; justify-content: center; min-height: 50vh; }
+.auth-box { background: var(--surface); border: 1px solid var(--border2); border-radius: var(--r-lg); padding: 2.5rem 2rem; width: 100%; max-width: 400px; text-align: center; }
+.auth-box .ornament { font-size: 28px; margin-bottom: 1rem; }
+.auth-box h2 { font-family: 'Playfair Display', serif; font-size: 22px; color: var(--gold2); margin-bottom: 6px; }
+.auth-box p { font-size: 12px; color: var(--text2); margin-bottom: 1.5rem; }
+.divider { display: flex; align-items: center; gap: 10px; margin: 1.4rem 0; color: var(--text3); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; }
+.divider::before, .divider::after { content:''; flex:1; height:1px; background: var(--border2); }
+.pin-row { display: flex; gap: 8px; }
+.err-msg { font-size: 11px; color: var(--red); margin-top: 6px; min-height: 14px; }
+.field { margin-bottom: 12px; text-align: left; }
+.field label { display: block; font-size: 10px; font-weight: 500; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 5px; }
+input[type=text], input[type=password], textarea, select {
+  width: 100%; background: var(--bg); border: 1px solid var(--border2); border-radius: var(--r);
+  padding: 8px 11px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 13px; outline: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+input:focus, textarea:focus, select:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(212,180,100,0.12); }
+textarea { min-height: 100px; resize: vertical; line-height: 1.6; }
+select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%235C5240' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px; cursor: pointer; }
+select option { background: #1E1B18; }
+.btn { display: inline-flex; align-items: center; gap: 5px; border-radius: var(--r); padding: 0 16px; height: 36px; cursor: pointer; font-size: 12px; font-weight: 500; font-family: 'DM Sans', sans-serif; border: 1px solid var(--border2); background: var(--surface2); color: var(--text); transition: background .15s, border-color .15s; white-space: nowrap; }
+.btn:hover { background: var(--surface3); }
+.btn-gold { background: var(--gold); border-color: var(--gold); color: #0C0A08; font-weight: 600; }
+.btn-gold:hover { background: var(--gold2); border-color: var(--gold2); }
+.btn-red { background: var(--red-bg); border-color: rgba(192,82,74,0.3); color: var(--red); }
+.btn-red:hover { background: rgba(192,82,74,0.2); }
+.btn-full { width: 100%; justify-content: center; }
+.btn-lg { height: 44px; font-size: 14px; border-radius: var(--r-lg); }
+.btn-sm { height: 28px; padding: 0 10px; font-size: 11px; }
+.tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 1.5rem; overflow-x: auto; }
+.tab { background: none; border: none; border-bottom: 2px solid transparent; padding: 9px 16px; cursor: pointer; font-size: 11px; font-weight: 500; color: var(--text3); font-family: 'DM Sans', sans-serif; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: -1px; transition: color .15s, border-color .15s; }
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+.admin-tab { display: none; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 1.25rem; margin-bottom: 1rem; }
+.card-title { font-family: 'DM Mono', monospace; font-size: 10px; font-weight: 500; color: var(--text3); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1rem; }
+.table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; margin-bottom: 1rem; }
+.table-head { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+.table-head-title { font-family: 'DM Mono', monospace; font-size: 10px; font-weight: 500; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; padding: 8px 14px; font-size: 10px; font-weight: 500; color: var(--text3); border-bottom: 1px solid var(--border); text-transform: uppercase; letter-spacing: 0.06em; background: var(--bg); }
+td { padding: 7px 14px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--gold-lt); }
+.empty { text-align: center; padding: 2.5rem; color: var(--text3); font-size: 12px; font-style: italic; }
+.del-btn { background: none; border: none; cursor: pointer; color: var(--text3); font-size: 12px; padding: 3px 6px; border-radius: 4px; transition: color .12s, background .12s; }
+.del-btn:hover { color: var(--red); background: var(--red-bg); }
+.badge { display: inline-block; font-family: 'DM Mono', monospace; font-size: 10px; font-weight: 500; padding: 2px 8px; border-radius: 99px; background: var(--surface2); color: var(--text2); border: 1px solid var(--border); }
+.status-msg { font-size: 11px; font-weight: 500; min-height: 14px; }
+.ok { color: var(--green); }
+.er { color: var(--red); }
+.flex-gap { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.flex-between { display: flex; align-items: center; justify-content: space-between; }
+code { font-family: 'DM Mono', monospace; font-size: 11px; background: var(--surface2); padding: 1px 5px; border-radius: 3px; color: var(--text2); }
+
+/* ── Vote ── */
+.vote-header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.vote-student-name { font-family: 'Playfair Display', serif; font-size: 20px; color: var(--gold2); }
+.progress-bar-wrap { margin-bottom: 2rem; }
+.progress-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace; margin-bottom: 5px; }
+.progress-bar { height: 3px; background: var(--surface2); border-radius: 99px; overflow: hidden; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, var(--gold), var(--gold2)); border-radius: 99px; transition: width .5s cubic-bezier(.4,0,.2,1); }
+.cat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; margin-bottom: 1.2rem; transition: border-color .2s; }
+.cat-card.voted { border-color: rgba(212,180,100,0.35); }
+.cat-header { padding: 1.1rem 1.25rem 0.8rem; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.cat-emoji { font-size: 22px; margin-right: 10px; flex-shrink: 0; }
+.cat-name { font-family: 'Playfair Display', serif; font-size: 17px; color: var(--text); line-height: 1.2; }
+.cat-desc { font-size: 12px; color: var(--text2); margin-top: 2px; }
+.cat-voted-badge { font-family: 'DM Mono', monospace; font-size: 10px; font-weight: 500; padding: 3px 10px; border-radius: 99px; background: var(--gold-bg); color: var(--gold); border: 1px solid var(--border2); white-space: nowrap; flex-shrink: 0; }
+.cat-body { padding: 1rem 1.25rem; }
+.candidates-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+.candidate-item { display: flex; align-items: center; justify-content: space-between; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--r); padding: 8px 12px; cursor: pointer; transition: background .15s, border-color .15s; gap: 10px; }
+.candidate-item:hover { background: var(--surface3); border-color: var(--border2); }
+.candidate-item.selected { background: var(--gold-bg); border-color: var(--border2); }
+.candidate-left { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+.candidate-radio { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--text3); flex-shrink: 0; transition: border-color .15s, background .15s; display: flex; align-items: center; justify-content: center; }
+.candidate-item.selected .candidate-radio { border-color: var(--gold); background: var(--gold); }
+.candidate-item.selected .candidate-radio::after { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #0C0A08; }
+.candidate-name { font-size: 13px; color: var(--text); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.candidate-votes { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text3); white-space: nowrap; }
+.propose-row { display: flex; gap: 8px; margin-top: 4px; }
+.propose-input { flex: 1; height: 34px; font-size: 12px; }
+.propose-hint { font-size: 11px; color: var(--text3); margin-bottom: 6px; }
+.recap-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; margin-bottom: 1.5rem; }
+.recap-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 1rem; }
+.recap-cat { font-size: 11px; color: var(--text3); margin-bottom: 4px; }
+.recap-vote { font-family: 'Playfair Display', serif; font-size: 15px; color: var(--gold2); }
+.recap-vote.empty-vote { color: var(--text3); font-style: italic; font-family: 'DM Sans', sans-serif; font-size: 12px; }
+
+/* ── Résultats admin ── */
+.results-grid { display: grid; gap: 1rem; }
+.result-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; }
+.result-card-header { padding: 1rem 1.25rem 0.8rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+.result-card-name { font-family: 'Playfair Display', serif; font-size: 16px; color: var(--text); }
+.result-card-count { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text3); margin-left: auto; }
+.result-row { display: flex; align-items: center; gap: 10px; padding: 8px 1.25rem; border-bottom: 1px solid var(--border); }
+.result-row:last-child { border-bottom: none; }
+.result-rank { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--text3); min-width: 24px; text-align: center; }
+.result-rank.gold { color: var(--gold); font-weight: 700; }
+.result-name { flex: 1; font-size: 14px; color: var(--text); font-weight: 500; }
+.result-bar-wrap { flex: 2; display: flex; align-items: center; gap: 8px; }
+.result-bar { height: 6px; background: var(--surface2); border-radius: 99px; flex: 1; overflow: hidden; }
+.result-bar-fill { height: 100%; background: linear-gradient(90deg, var(--gold), var(--gold2)); border-radius: 99px; transition: width .5s ease; }
+.result-count { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--text2); min-width: 60px; text-align: right; font-weight: 500; }
+
+/* ── Détail des votes ── */
+.detail-section { margin-bottom: 1.5rem; }
+.detail-section-header { display: flex; align-items: center; gap: 10px; padding: 0.9rem 1.25rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg) var(--r-lg) 0 0; border-bottom: none; }
+.detail-section-emoji { font-size: 18px; }
+.detail-section-name { font-family: 'Playfair Display', serif; font-size: 15px; color: var(--text); }
+.detail-section-count { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text3); margin-left: auto; }
+.detail-table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 0 0 var(--r-lg) var(--r-lg); overflow: hidden; }
+.detail-table-wrap table { font-size: 12px; }
+.detail-table-wrap th { font-size: 10px; }
+.detail-table-wrap td { padding: 6px 14px; }
+
+@media (max-width: 600px) {
+  .page { padding: 1.5rem 1rem 4rem; }
+  .site-title { font-size: 26px; }
+}
+</style>
+</head>
+<body>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDjAt_9gox702UaXf7-EYGojv-nbfYwYuY",
+  authDomain: "amphi-blanc---voeux-finaux.firebaseapp.com",
+  databaseURL: "https://amphi-blanc---voeux-finaux-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "amphi-blanc---voeux-finaux",
+  storageBucket: "amphi-blanc---voeux-finaux.firebasestorage.app",
+  messagingSenderId: "91659498687",
+  appId: "1:91659498687:web:33b4a83265eaaef4e5c20a",
+  measurementId: "G-S6P9DLTJ2N"
+};
+const FB = 'gala';
+const FIREBASE_OK = !FIREBASE_CONFIG.apiKey.startsWith('VOTRE');
+</script>
+
+<div class="page">
+  <div class="site-header">
+    <div class="site-kicker">Promotion 50 · IRA de Bastia</div>
+    <div class="site-title">Palmarès du Gala</div>
+    <div class="site-sub">Votez pour vos camarades — les résultats restent secrets jusqu'au soir</div>
+    <div class="sync-row">
+      <span class="sync-dot" id="sync-dot"></span>
+      <span id="sync-label">—</span>
+    </div>
+  </div>
+
+  <!-- ══ LOCK ══ -->
+  <div id="screen-lock" class="screen active">
+    <div class="center-wrap">
+      <div class="auth-box">
+        <div class="ornament">🏆</div>
+        <h2>Accès à la plateforme</h2>
+        <p>Entrez votre code PIN pour voter, ou le code admin pour gérer la plateforme.</p>
+        <div class="field">
+          <label>Je suis…</label>
+          <select id="pin-select" onchange="onPinSelectChange()">
+            <option value="">— Choisir mon nom —</option>
+          </select>
+        </div>
+        <div id="pin-field-wrap" style="display:none;">
+          <div class="field">
+            <label>Code PIN</label>
+            <input type="password" id="pin-input" placeholder="••••" maxlength="4" inputmode="numeric"
+              style="text-align:center;letter-spacing:6px;font-family:'DM Mono',monospace;"
+              onkeydown="if(event.key==='Enter')tryPin()" />
+          </div>
+          <button class="btn btn-gold btn-full btn-lg" onclick="tryPin()">Voter</button>
+          <div class="err-msg" id="pin-err"></div>
+        </div>
+        <div class="divider">Administration</div>
+        <div class="pin-row">
+          <input type="password" id="admin-input" placeholder="Code admin" onkeydown="if(event.key==='Enter')tryAdmin()" />
+          <button class="btn btn-gold" onclick="tryAdmin()">Entrer</button>
+        </div>
+        <div class="err-msg" id="admin-err"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ VOTE ══ -->
+  <div id="screen-vote" class="screen">
+    <div style="margin-bottom:1.5rem;">
+      <div class="vote-header-top">
+        <div>
+          <div class="vote-student-name" id="vote-student-name">—</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px;" id="vote-student-sub">—</div>
+        </div>
+        <button class="btn btn-sm" onclick="logout()">Se déconnecter</button>
+      </div>
+    </div>
+    <div class="progress-bar-wrap">
+      <div class="progress-labels">
+        <span id="prog-label">0 / 0 catégories votées</span>
+        <span id="prog-pct">0%</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+    </div>
+    <div id="categories-list"></div>
+    <div style="text-align:center;margin-top:1.5rem;">
+      <button class="btn btn-gold btn-lg" onclick="showRecap()" id="voir-recap-btn" style="display:none;">Voir mon récapitulatif →</button>
+    </div>
+  </div>
+
+  <!-- ══ RÉCAP ÉLÈVE ══ -->
+  <div id="screen-recap" class="screen">
+    <div class="flex-between" style="margin-bottom:1.5rem;">
+      <div>
+        <div style="font-family:'Playfair Display',serif;font-size:20px;color:var(--gold2);">Mes votes</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:2px;">Récapitulatif · modifiable jusqu'à la clôture</div>
+      </div>
+      <button class="btn btn-sm" onclick="showScreen('screen-vote');renderVoteScreen();">← Modifier</button>
+    </div>
+    <div class="recap-grid" id="recap-grid"></div>
+    <div style="text-align:center;margin-top:1rem;">
+      <button class="btn btn-gold btn-lg" onclick="logout()">Terminer et me déconnecter</button>
+    </div>
+  </div>
+
+  <!-- ══ ADMIN ══ -->
+  <div id="screen-admin" class="screen">
+    <div class="flex-between" style="margin-bottom:1.5rem;">
+      <div style="font-family:'Playfair Display',serif;font-size:20px;color:var(--gold2);">Administration</div>
+      <button class="btn btn-sm" onclick="showScreen('screen-lock')">Verrouiller</button>
+    </div>
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('tab-eleves',this)">Élèves</button>
+      <button class="tab" onclick="switchTab('tab-cats',this)">Catégories</button>
+      <button class="tab" onclick="switchTab('tab-results',this)">Résultats</button>
+      <button class="tab" onclick="switchTab('tab-detail',this)">Détail des votes</button>
+      <button class="tab" onclick="switchTab('tab-settings',this)">Paramètres</button>
+    </div>
+
+    <!-- Élèves -->
+    <div id="tab-eleves" class="admin-tab" style="display:block;">
+      <div class="card">
+        <div class="card-title">Importer les élèves</div>
+        <p style="font-size:12px;color:var(--text2);margin-bottom:10px;">Un élève par ligne : <code>Prénom Nom;PIN</code> — ex : <code>Marie Dupont;1234</code><br>Si pas de PIN : <code>Marie Dupont</code> (accès libre)</p>
+        <div class="field"><textarea id="eleves-bulk" placeholder="Marie Dupont;1234&#10;Jean Martin;5678&#10;Sophie Bernard;0000"></textarea></div>
+        <div class="flex-gap">
+          <button class="btn btn-gold" onclick="importEleves()">Importer</button>
+          <button class="btn btn-red btn-sm" onclick="clearEleves()">Tout effacer</button>
+        </div>
+        <div class="status-msg" id="eleves-status"></div>
+      </div>
+      <div class="table-wrap">
+        <div class="table-head">
+          <span class="table-head-title">Élèves enregistrés</span>
+          <span class="badge" id="eleves-count">0</span>
+        </div>
+        <div id="eleves-table"><div class="empty">Aucun élève.</div></div>
+      </div>
+    </div>
+
+    <!-- Catégories -->
+    <div id="tab-cats" class="admin-tab">
+      <div class="card">
+        <div class="card-title">Ajouter une catégorie</div>
+        <div style="display:grid;grid-template-columns:60px 1fr;gap:10px;margin-bottom:10px;">
+          <div class="field"><label>Emoji</label><input type="text" id="cat-emoji" placeholder="😄" maxlength="4" style="text-align:center;font-size:20px;" /></div>
+          <div class="field"><label>Nom de la catégorie</label><input type="text" id="cat-name" placeholder="Le plus beau sourire" onkeydown="if(event.key==='Enter')addCat()" /></div>
+        </div>
+        <div class="field"><label>Description (optionnelle)</label><input type="text" id="cat-desc" placeholder="Celui qui illumine toute la salle…" onkeydown="if(event.key==='Enter')addCat()" /></div>
+        <button class="btn btn-gold" onclick="addCat()">Ajouter</button>
+        <div class="status-msg" id="cats-status"></div>
+      </div>
+      <div class="table-wrap">
+        <div class="table-head">
+          <span class="table-head-title">Catégories</span>
+          <span class="badge" id="cats-count">0</span>
+        </div>
+        <div id="cats-table"><div class="empty">Aucune catégorie.</div></div>
+      </div>
+    </div>
+
+    <!-- ══ RÉSULTATS ══ -->
+    <div id="tab-results" class="admin-tab">
+      <div class="flex-between" style="margin-bottom:1rem;">
+        <p style="font-size:12px;color:var(--text2);">Total des votes par candidat, par catégorie.</p>
+        <button class="btn btn-sm" onclick="exportCSV()">Exporter CSV</button>
+      </div>
+      <div id="results-container"><div class="empty">Aucun vote enregistré.</div></div>
+    </div>
+
+    <!-- ══ DÉTAIL DES VOTES ══ -->
+    <div id="tab-detail" class="admin-tab">
+      <div class="flex-between" style="margin-bottom:1rem;">
+        <p style="font-size:12px;color:var(--text2);">Pour chaque catégorie : qui a voté pour qui. Ces informations restent confidentielles.</p>
+        <div class="flex-gap">
+          <button class="btn btn-red btn-sm" onclick="resetVotes()">Réinitialiser les votes</button>
+        </div>
+      </div>
+      <div id="detail-container"><div class="empty">Aucun vote enregistré.</div></div>
+    </div>
+
+    <!-- Paramètres -->
+    <div id="tab-settings" class="admin-tab">
+      <div class="card">
+        <div class="card-title">Code administrateur</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+          <div class="field"><label>Nouveau code</label><input type="password" id="new-pin" placeholder="Nouveau code" /></div>
+          <div class="field"><label>Confirmer</label><input type="password" id="confirm-pin" placeholder="Confirmer" /></div>
+        </div>
+        <button class="btn btn-gold" onclick="changePin()">Enregistrer</button>
+        <div class="status-msg" id="pin-change-status"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Clôture des votes</div>
+        <div class="flex-gap" style="margin-bottom:8px;">
+          <label style="font-size:13px;color:var(--text);margin:0;text-transform:none;letter-spacing:0;" for="votes-open-toggle">Votes ouverts</label>
+          <input type="checkbox" id="votes-open-toggle" style="width:auto;height:18px;accent-color:var(--gold);cursor:pointer;" onchange="toggleVotesOpen()" />
+        </div>
+        <p style="font-size:11px;color:var(--text3);">Décochez pour clôturer les votes. Les élèves ne pourront plus modifier leurs choix.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
+<script>
+// ══════════════════════════════════════
+//  ÉTAT
+// ══════════════════════════════════════
+let eleves     = [];
+let categories = [];
+let votes      = {};
+let votesOpen  = true;
+let db         = null;
+let currentUser = null;
+
+// ══════════════════════════════════════
+//  FIREBASE
+// ══════════════════════════════════════
+function initFirebase() {
+  if (!FIREBASE_OK) { loadLocal(); return; }
+  try {
+    firebase.initializeApp(FIREBASE_CONFIG);
+    db = firebase.database();
+    setSync('Connexion…', false);
+    setupListeners();
+  } catch(e) { setSync('Erreur', false); }
+}
+function setSync(t, live) {
+  document.getElementById('sync-label').textContent = t;
+  document.getElementById('sync-dot').className = 'sync-dot' + (live ? ' live' : '');
+}
+function setupListeners() {
+  [
+    ['eleves',     v => { eleves     = v ? Object.values(v) : []; }],
+    ['categories', v => { categories = v ? Object.values(v).sort((a,b)=>(a.order||0)-(b.order||0)) : []; }],
+    ['votes',      v => { votes      = v || {}; }],
+    ['settings',   v => {
+      votesOpen = v?.votesOpen !== false;
+      const t = document.getElementById('votes-open-toggle');
+      if (t) t.checked = votesOpen;
+    }],
+  ].forEach(([path, handler]) => {
+    db.ref(FB+'/'+path).on('value', snap => {
+      handler(snap.val());
+      refresh();
+      setSync('Sync · '+new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}), true);
+    });
+  });
+}
+
+const LS = {
+  get: k => { try { return JSON.parse(localStorage.getItem('gala_'+k)); } catch(e){return null;} },
+  set: (k,v) => localStorage.setItem('gala_'+k, JSON.stringify(v))
+};
+function loadLocal() {
+  eleves     = LS.get('eleves')     || [];
+  categories = (LS.get('categories')||[]).sort((a,b)=>(a.order||0)-(b.order||0));
+  votes      = LS.get('votes')      || {};
+  votesOpen  = LS.get('votesOpen') !== false;
+  const t = document.getElementById('votes-open-toggle');
+  if (t) t.checked = votesOpen;
+  refresh();
+  setSync('Local', false);
+}
+
+// ══════════════════════════════════════
+//  NAVIGATION
+// ══════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (id === 'screen-lock') populatePinSelect();
+}
+function switchTab(tabId, btn) {
+  document.querySelectorAll('.admin-tab').forEach(t => t.style.display = 'none');
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(tabId).style.display = 'block';
+  btn.classList.add('active');
+  if (tabId === 'tab-results') renderResults();
+  if (tabId === 'tab-detail')  renderDetail();
+}
+
+// ══════════════════════════════════════
+//  AUTH
+// ══════════════════════════════════════
+function populatePinSelect() {
+  const sel = document.getElementById('pin-select');
+  sel.innerHTML = '<option value="">— Choisir mon nom —</option>';
+  eleves.forEach(e => {
+    const o = document.createElement('option');
+    o.value = e.id; o.textContent = e.nom;
+    sel.appendChild(o);
+  });
+  document.getElementById('pin-input').value = '';
+  document.getElementById('pin-err').textContent = '';
+  document.getElementById('pin-field-wrap').style.display = 'none';
+}
+function onPinSelectChange() {
+  const id = document.getElementById('pin-select').value;
+  document.getElementById('pin-field-wrap').style.display = id ? '' : 'none';
+  document.getElementById('pin-input').value = '';
+  document.getElementById('pin-err').textContent = '';
+}
+function tryPin() {
+  const id = document.getElementById('pin-select').value;
+  const entered = document.getElementById('pin-input').value;
+  if (!id) return;
+  const eleve = eleves.find(e => e.id === id);
+  if (!eleve) return;
+  if (!eleve.pin || entered === eleve.pin) {
+    currentUser = eleve.nom;
+    showScreen('screen-vote');
+    renderVoteScreen();
+  } else {
+    document.getElementById('pin-err').textContent = 'Code PIN incorrect.';
+  }
+}
+async function tryAdmin() {
+  const pin = document.getElementById('admin-input').value;
+  let stored = 'admin2024';
+  if (db) { try { const s = await db.ref(FB+'/settings/pin').get(); if (s.val()) stored = s.val(); } catch(e){} }
+  else stored = LS.get('pin') || 'admin2024';
+  if (pin === stored) {
+    document.getElementById('admin-input').value = '';
+    document.getElementById('admin-err').textContent = '';
+    showScreen('screen-admin');
+    refresh();
+  } else {
+    document.getElementById('admin-err').textContent = 'Code incorrect.';
+  }
+}
+function logout() {
+  currentUser = null;
+  showScreen('screen-lock');
+}
+
+// ══════════════════════════════════════
+//  LOGIQUE VOTES
+// ══════════════════════════════════════
+function myVotes() {
+  const out = {};
+  categories.forEach(cat => {
+    const catVotes = votes[cat.id] || {};
+    for (const [candidat, votants] of Object.entries(catVotes)) {
+      if (Array.isArray(votants) && votants.includes(currentUser)) {
+        out[cat.id] = candidat;
+        break;
+      }
+    }
+  });
+  return out;
+}
+
+function getCandidats(catId) {
+  const catVotes = votes[catId] || {};
+  return Object.entries(catVotes)
+    .map(([nom, votants]) => ({ nom, count: Array.isArray(votants) ? votants.length : 0 }))
+    .sort((a,b) => b.count - a.count);
+}
+
+async function vote(catId, candidatNom) {
+  if (!currentUser || !votesOpen) return;
+  const catVotes = { ...(votes[catId] || {}) };
+  // Retirer le vote précédent de cet utilisateur
+  for (const nom of Object.keys(catVotes)) {
+    const arr = catVotes[nom] || [];
+    catVotes[nom] = arr.filter(v => v !== currentUser);
+    if (catVotes[nom].length === 0) delete catVotes[nom];
+  }
+  // Ajouter le nouveau vote
+  if (candidatNom) {
+    catVotes[candidatNom] = [...(catVotes[candidatNom] || []), currentUser];
+  }
+  if (db) {
+    await db.ref(`${FB}/votes/${catId}`).set(Object.keys(catVotes).length ? catVotes : null);
+  } else {
+    votes[catId] = catVotes;
+    LS.set('votes', votes);
+    refresh();
+  }
+}
+
+async function proposeCandidat(catId, nom) {
+  const trimmed = nom.trim();
+  if (!trimmed || !currentUser) return;
+  await vote(catId, trimmed);
+}
+
+// ══════════════════════════════════════
+//  RENDER VOTE ÉLÈVE
+// ══════════════════════════════════════
+function renderVoteScreen() {
+  const nameEl = document.getElementById('vote-student-name');
+  const subEl  = document.getElementById('vote-student-sub');
+  if (nameEl) nameEl.textContent = currentUser || '—';
+  if (subEl)  subEl.textContent  = votesOpen ? 'Les votes sont ouverts' : '⚠ Les votes sont clôturés';
+
+  const my    = myVotes();
+  const voted = Object.keys(my).length;
+  const total = categories.length;
+  const pct   = total > 0 ? Math.round((voted/total)*100) : 0;
+
+  const progLabel = document.getElementById('prog-label');
+  const progPct   = document.getElementById('prog-pct');
+  const progFill  = document.getElementById('prog-fill');
+  if (progLabel) progLabel.textContent = `${voted} / ${total} catégories votées`;
+  if (progPct)   progPct.textContent   = pct + '%';
+  if (progFill)  progFill.style.width  = pct + '%';
+
+  const recapBtn = document.getElementById('voir-recap-btn');
+  if (recapBtn) recapBtn.style.display = voted > 0 ? '' : 'none';
+
+  const list = document.getElementById('categories-list');
+  if (!list) return;
+  if (!categories.length) {
+    list.innerHTML = '<div class="empty">Aucune catégorie configurée pour l\'instant.</div>';
+    return;
+  }
+  list.innerHTML = categories.map(cat => renderCatCard(cat, my[cat.id] || null)).join('');
+}
+
+function renderCatCard(cat, myChoice) {
+  const candidats = getCandidats(cat.id);
+  const hasVoted  = !!myChoice;
+  const isOpen    = votesOpen;
+
+  const candidatsHtml = candidats.length === 0
+    ? `<div style="font-size:12px;color:var(--text3);font-style:italic;padding:8px 0;">Aucun candidat proposé — soyez le premier !</div>`
+    : candidats.map(c => {
+        const selected = c.nom === myChoice;
+        return `<div class="candidate-item${selected?' selected':''}" onclick="${isOpen?`selectCandidat('${esc(cat.id)}','${esc(c.nom)}')`:''}">
+          <div class="candidate-left">
+            <div class="candidate-radio"></div>
+            <span class="candidate-name">${esc(c.nom)}</span>
+          </div>
+          <span class="candidate-votes">${c.count} vote${c.count>1?'s':''}</span>
+        </div>`;
+      }).join('');
+
+  const proposeHtml = isOpen ? `
+    <div class="propose-hint">Vous ne trouvez pas le bon nom ? Proposez-en un :</div>
+    <div class="propose-row">
+      <input type="text" class="propose-input" id="propose-${esc(cat.id)}" placeholder="Prénom Nom…" onkeydown="if(event.key==='Enter')proposeAndVote('${esc(cat.id)}')" />
+      <button class="btn btn-gold btn-sm" onclick="proposeAndVote('${esc(cat.id)}')">Proposer & voter</button>
+    </div>` : '';
+
+  return `<div class="cat-card${hasVoted?' voted':''}" id="cat-${esc(cat.id)}">
+    <div class="cat-header">
+      <div style="display:flex;align-items:flex-start;">
+        <span class="cat-emoji">${esc(cat.emoji||'🏅')}</span>
+        <div>
+          <div class="cat-name">${esc(cat.nom)}</div>
+          ${cat.desc ? `<div class="cat-desc">${esc(cat.desc)}</div>` : ''}
+        </div>
+      </div>
+      ${hasVoted ? `<span class="cat-voted-badge">✓ Voté</span>` : ''}
+    </div>
+    <div class="cat-body">
+      <div class="candidates-list">${candidatsHtml}</div>
+      ${proposeHtml}
+    </div>
+  </div>`;
+}
+
+function selectCandidat(catId, candidatNom) {
+  vote(catId, candidatNom).then(() => { if (!db) renderVoteScreen(); });
+}
+function proposeAndVote(catId) {
+  const input = document.getElementById('propose-'+catId);
+  if (!input || !input.value.trim()) return;
+  const nom = input.value;
+  input.value = '';
+  proposeCandidat(catId, nom).then(() => { if (!db) renderVoteScreen(); });
+}
+function showRecap() {
+  const my    = myVotes();
+  const grid  = document.getElementById('recap-grid');
+  if (grid) {
+    grid.innerHTML = categories.map(cat => {
+      const choix = my[cat.id];
+      return `<div class="recap-item">
+        <div class="recap-cat">${esc(cat.emoji||'🏅')} ${esc(cat.nom)}</div>
+        ${choix
+          ? `<div class="recap-vote">${esc(choix)}</div>`
+          : `<div class="recap-vote empty-vote">Pas encore voté</div>`}
+      </div>`;
+    }).join('');
+  }
+  showScreen('screen-recap');
+}
+
+// ══════════════════════════════════════
+//  RENDER ADMIN — RÉSULTATS
+//  Affiche uniquement les totaux de votes
+//  (qui a le plus de voix dans chaque catégorie)
+// ══════════════════════════════════════
+function renderResults() {
+  const el = document.getElementById('results-container');
+  if (!el) return;
+  if (!categories.length) { el.innerHTML = '<div class="empty">Aucune catégorie.</div>'; return; }
+
+  const allEmpty = categories.every(cat => getCandidats(cat.id).length === 0);
+  if (allEmpty) { el.innerHTML = '<div class="empty">Aucun vote enregistré.</div>'; return; }
+
+  el.innerHTML = '<div class="results-grid">' + categories.map(cat => {
+    const candidats  = getCandidats(cat.id);
+    const totalVotes = candidats.reduce((s,c) => s+c.count, 0);
+    const maxCount   = candidats[0]?.count || 1;
+
+    if (!candidats.length) return `<div class="result-card">
+      <div class="result-card-header">
+        <span style="font-size:18px;">${esc(cat.emoji||'🏅')}</span>
+        <span class="result-card-name">${esc(cat.nom)}</span>
+        <span class="result-card-count">0 vote</span>
+      </div>
+      <div class="empty" style="padding:1rem;">Aucun vote pour l'instant.</div>
+    </div>`;
+
+    const rows = candidats.map((c, i) => {
+      const pct       = Math.round((c.count / maxCount) * 100);
+      const rankClass = i === 0 ? ' gold' : '';
+      const rankLabel = i === 0 ? '★' : (i + 1);
+      return `<div class="result-row">
+        <span class="result-rank${rankClass}">${rankLabel}</span>
+        <span class="result-name">${esc(c.nom)}</span>
+        <div class="result-bar-wrap">
+          <div class="result-bar"><div class="result-bar-fill" style="width:${pct}%"></div></div>
+        </div>
+        <span class="result-count">${c.count} voix</span>
+      </div>`;
+    }).join('');
+
+    return `<div class="result-card">
+      <div class="result-card-header">
+        <span style="font-size:18px;">${esc(cat.emoji||'🏅')}</span>
+        <span class="result-card-name">${esc(cat.nom)}</span>
+        <span class="result-card-count">${totalVotes} vote${totalVotes>1?'s':''}</span>
+      </div>
+      ${rows}
+    </div>`;
+  }).join('') + '</div>';
+}
+
+// ══════════════════════════════════════
+//  RENDER ADMIN — DÉTAIL DES VOTES
+//  Affiche, pour chaque catégorie,
+//  le tableau votant → candidat choisi
+// ══════════════════════════════════════
+function renderDetail() {
+  const el = document.getElementById('detail-container');
+  if (!el) return;
+  if (!categories.length) { el.innerHTML = '<div class="empty">Aucune catégorie.</div>'; return; }
+
+  // Construire, pour chaque catégorie, la liste votant → choix
+  const html = categories.map(cat => {
+    const catVotes = votes[cat.id] || {};
+
+    // Inverser la structure : { candidat: [votants] } → { votant: candidat }
+    const parVotant = {}; // { nomVotant: nomCandidat }
+    for (const [candidat, votants] of Object.entries(catVotes)) {
+      if (!Array.isArray(votants)) continue;
+      votants.forEach(votant => { parVotant[votant] = candidat; });
+    }
+
+    const lignes = Object.entries(parVotant).sort((a,b) => a[0].localeCompare(b[0]));
+    const nbVotes = lignes.length;
+
+    const tableContent = lignes.length === 0
+      ? `<div class="empty" style="padding:1rem;">Aucun vote pour l'instant.</div>`
+      : `<div class="detail-table-wrap"><table>
+          <thead><tr><th>Élève</th><th>A voté pour</th></tr></thead>
+          <tbody>
+            ${lignes.map(([votant, candidat]) => `<tr>
+              <td style="color:var(--text2);">${esc(votant)}</td>
+              <td style="font-weight:500;color:var(--gold2);">${esc(candidat)}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table></div>`;
+
+    return `<div class="detail-section">
+      <div class="detail-section-header">
+        <span class="detail-section-emoji">${esc(cat.emoji||'🏅')}</span>
+        <span class="detail-section-name">${esc(cat.nom)}</span>
+        <span class="detail-section-count">${nbVotes} vote${nbVotes>1?'s':''}</span>
+      </div>
+      ${tableContent}
+    </div>`;
+  }).join('');
+
+  el.innerHTML = html || '<div class="empty">Aucun vote enregistré.</div>';
+}
+
+// ══════════════════════════════════════
+//  RENDER ADMIN — ÉLÈVES / CATÉGORIES
+// ══════════════════════════════════════
+function renderAdminEleves() {
+  document.getElementById('eleves-count').textContent = eleves.length;
+  const el = document.getElementById('eleves-table');
+  if (!el) return;
+  if (!eleves.length) { el.innerHTML = '<div class="empty">Aucun élève.</div>'; return; }
+  el.innerHTML = `<table><thead><tr><th>Nom</th><th>PIN</th><th></th></tr></thead><tbody>` +
+    eleves.map(e => `<tr>
+      <td>${esc(e.nom)}</td>
+      <td><span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);">${e.pin ? '••••' : 'aucun'}</span></td>
+      <td><button class="del-btn" onclick="delEleve('${e.id}')">✕</button></td>
+    </tr>`).join('') + `</tbody></table>`;
+}
+
+function renderAdminCats() {
+  document.getElementById('cats-count').textContent = categories.length;
+  const el = document.getElementById('cats-table');
+  if (!el) return;
+  if (!categories.length) { el.innerHTML = '<div class="empty">Aucune catégorie.</div>'; return; }
+  el.innerHTML = `<table><thead><tr><th>Emoji</th><th>Catégorie</th><th>Description</th><th></th></tr></thead><tbody>` +
+    categories.map(c => `<tr>
+      <td style="font-size:18px;text-align:center;">${esc(c.emoji||'🏅')}</td>
+      <td style="font-weight:500;">${esc(c.nom)}</td>
+      <td style="font-size:12px;color:var(--text2);">${esc(c.desc||'')}</td>
+      <td><button class="del-btn" onclick="delCat('${c.id}')">✕</button></td>
+    </tr>`).join('') + `</tbody></table>`;
+}
+
+// ══════════════════════════════════════
+//  REFRESH GLOBAL
+// ══════════════════════════════════════
+function refresh() {
+  populatePinSelect();
+  renderAdminEleves();
+  renderAdminCats();
+  renderResults();
+  renderDetail();
+  if (currentUser) renderVoteScreen();
+}
+
+// ══════════════════════════════════════
+//  ACTIONS ADMIN
+// ══════════════════════════════════════
+async function importEleves() {
+  const lines = document.getElementById('eleves-bulk').value.trim().split('\n').filter(l=>l.trim());
+  const toImport = [];
+  lines.forEach(line => {
+    const parts = line.split(';');
+    const nom = parts[0].trim(); if (!nom) return;
+    const pin = parts[1]?.trim() || '';
+    const id  = 'e_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+    toImport.push({id, nom, pin});
+  });
+  if (!toImport.length) { setStatus('eleves-status','Format invalide.','er'); return; }
+  if (db) {
+    const u = {}; toImport.forEach(e => { u[`${FB}/eleves/${e.id}`] = e; });
+    await db.ref().update(u);
+  } else {
+    eleves = [...eleves, ...toImport];
+    LS.set('eleves', eleves); refresh();
+  }
+  document.getElementById('eleves-bulk').value = '';
+  setStatus('eleves-status', `${toImport.length} élève(s) importé(s).`, 'ok');
+}
+
+async function clearEleves() {
+  if (!confirm('Effacer tous les élèves ?')) return;
+  if (db) await db.ref(`${FB}/eleves`).remove();
+  else { eleves=[]; LS.set('eleves',[]); refresh(); }
+}
+async function delEleve(id) {
+  if (db) await db.ref(`${FB}/eleves/${id}`).remove();
+  else { eleves=eleves.filter(e=>e.id!==id); LS.set('eleves',eleves); refresh(); }
+}
+
+async function addCat() {
+  const nom   = document.getElementById('cat-name').value.trim();
+  const emoji = document.getElementById('cat-emoji').value.trim() || '🏅';
+  const desc  = document.getElementById('cat-desc').value.trim();
+  if (!nom) { setStatus('cats-status','Entrez un nom.','er'); return; }
+  const maxOrder = categories.length ? Math.max(...categories.map(c=>c.order||0)) : 0;
+  const cat = { id:'c_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), nom, emoji, desc, order:maxOrder+1 };
+  if (db) await db.ref(`${FB}/categories/${cat.id}`).set(cat);
+  else { categories.push(cat); LS.set('categories',categories); refresh(); }
+  document.getElementById('cat-name').value  = '';
+  document.getElementById('cat-emoji').value = '';
+  document.getElementById('cat-desc').value  = '';
+  setStatus('cats-status','Catégorie ajoutée.','ok');
+}
+async function delCat(id) {
+  if (!confirm('Supprimer cette catégorie et tous ses votes ?')) return;
+  if (db) { await db.ref(`${FB}/categories/${id}`).remove(); await db.ref(`${FB}/votes/${id}`).remove(); }
+  else { categories=categories.filter(c=>c.id!==id); delete votes[id]; LS.set('categories',categories); LS.set('votes',votes); refresh(); }
+}
+async function resetVotes() {
+  if (!confirm('Réinitialiser TOUS les votes ?')) return;
+  if (db) await db.ref(`${FB}/votes`).remove();
+  else { votes={}; LS.set('votes',{}); refresh(); }
+}
+async function toggleVotesOpen() {
+  const val = document.getElementById('votes-open-toggle').checked;
+  votesOpen = val;
+  if (db) await db.ref(`${FB}/settings/votesOpen`).set(val);
+  else { LS.set('votesOpen', val); refresh(); }
+}
+async function changePin() {
+  const p1=document.getElementById('new-pin').value, p2=document.getElementById('confirm-pin').value;
+  if (!p1) { setStatus('pin-change-status','Entrez un code.','er'); return; }
+  if (p1!==p2) { setStatus('pin-change-status','Les codes ne correspondent pas.','er'); return; }
+  if (db) await db.ref(`${FB}/settings/pin`).set(p1);
+  else LS.set('pin',p1);
+  document.getElementById('new-pin').value=''; document.getElementById('confirm-pin').value='';
+  setStatus('pin-change-status','Code modifié.','ok');
+}
+
+function exportCSV() {
+  const rows = [['Catégorie','Candidat','Nombre de votes']];
+  categories.forEach(cat => {
+    const candidats = getCandidats(cat.id);
+    if (!candidats.length) { rows.push([cat.nom,'—',0]); return; }
+    candidats.forEach(c => rows.push([cat.nom, c.nom, c.count]));
+  });
+  const csv = rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,'+encodeURIComponent('\uFEFF'+csv);
+  a.download = 'palmares-gala.csv'; a.click();
+}
+
+function setStatus(id, msg, cls) {
+  const el=document.getElementById(id); if(!el)return;
+  el.textContent=msg; el.className='status-msg '+cls;
+  setTimeout(()=>{el.textContent='';},4000);
+}
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+initFirebase();
+</script>
+</body>
+</html>
